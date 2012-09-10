@@ -18,12 +18,14 @@
 
 	Global $gDirTemp = @TempDir & "\au3loctranformer"
 	Global $gDbgFile = $gDirTemp & "\au3loctranformer.log"
+	Global $gFileIniWithStrings = @ScriptDir & "\localization.ini" ; ini file with strings and corresponding properties
 
 	Global $gMsgBoxTitle = "Au3 Localization Transformer"
 
 	Global $gFileToTransform ; au3 file incl. path
-	Global $gFileToWriteOutput ; file to save with loc changes
-	Global $gFileIniWithStrings ; ini file with strings and corresponding properties
+	Global $gFileToWriteOutput ; copy of au3 file with exchanged strings
+
+	Global $gaListOfStrings[1] ; list of strings found
 	Global $gaListofFileLines ; stores the lines of $gFileToTransform
 
 #EndRegion
@@ -42,30 +44,50 @@ Func _Main()
 	_ReadAu3FileToArray()
 ;~ 	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
 	_GetStringsFromArray()
+	_WriteStringToLocalizationIni()
 
+EndFunc
+
+Func _WriteStringToLocalizationIni()
+
+	_WriteDebug("INFO;_WriteStringToLocalizationIni;_WriteStringToLocalizationIni started")
+
+	for $i = 0 to UBound($gaListOfStrings)-1
+		IniWrite($gFileIniWithStrings, "0000", "IDS_" & $i, $gaListOfStrings[$i])
+	Next
+
+	_WriteDebug("INFO;_WriteStringToLocalizationIni;_WriteStringToLocalizationIni ended")
 EndFunc
 
 Func _GetStringsFromArray()
 
-	local $laStringsAll[1]
 	local $laStringsLine
+	local $lStringMarker ; apostroph or double quote
 
 	for $i = 1 to $gaListofFileLines[0]
 		if StringInStr($gaListofFileLines[$i], '"') = 0 then ContinueLoop
 
-		$laStringsLine = _StringBetween($gaListofFileLines[$i], '"', '"')
+		$lStringMarker = _CheckForStringMarker($gaListofFileLines[$i])
+
+		Select
+			case StringInStr($gaListofFileLines[$i], "MsgBox(")
+			case StringInStr($gaListofFileLines[$i], "guictrlbutton(")
+			case Else
+				ContinueLoop
+		EndSelect
+
+		$laStringsLine = _StringBetween($gaListofFileLines[$i], $lStringMarker, $lStringMarker)
 		if @error Then
 			_WriteDebug("WARN;_GetStringsFromArray;_StringBetween returned with error: " & @error & " on string '" & StringReplace($gaListofFileLines[$i], ";", "") & "'")
 			ContinueLoop
 		EndIf
 
 		for $j = 0 to UBound($laStringsLine)-1
-			_ArrayAdd($laStringsAll, $laStringsLine[$j])
+			_ArrayAdd($gaListOfStrings, $laStringsLine[$j])
 		Next
-
 	Next
-	_ArrayDelete($laStringsAll, 0) ; delete 0-index
-	_ArrayDisplay($laStringsAll, "$laStringsAll")
+	_ArrayDelete($gaListOfStrings, 0) ; delete 0-index
+;~ 	_ArrayDisplay($gaListOfStrings, "$gaListOfStrings")
 
 EndFunc
 
