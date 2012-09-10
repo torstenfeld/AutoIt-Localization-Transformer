@@ -10,6 +10,7 @@
 
 	#Include <File.au3>
 	#Include <Array.au3>
+	#Include <String.au3>
 
 #EndRegion
 
@@ -39,7 +40,32 @@ Func _Main()
 	$gFileToTransform = @ScriptDir & "\testfile.au3"
 
 	_ReadAu3FileToArray()
-	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
+;~ 	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
+	_GetStringsFromArray()
+
+EndFunc
+
+Func _GetStringsFromArray()
+
+	local $laStringsAll[1]
+	local $laStringsLine
+
+	for $i = 1 to $gaListofFileLines[0]
+		if StringInStr($gaListofFileLines[$i], '"') = 0 then ContinueLoop
+
+		$laStringsLine = _StringBetween($gaListofFileLines[$i], '"', '"')
+		if @error Then
+			_WriteDebug("WARN;_GetStringsFromArray;_StringBetween returned with error: " & @error & " on string '" & StringReplace($gaListofFileLines[$i], ";", "") & "'")
+			ContinueLoop
+		EndIf
+
+		for $j = 0 to UBound($laStringsLine)-1
+			_ArrayAdd($laStringsAll, $laStringsLine[$j])
+		Next
+
+	Next
+	_ArrayDelete($laStringsAll, 0) ; delete 0-index
+	_ArrayDisplay($laStringsAll, "$laStringsAll")
 
 EndFunc
 
