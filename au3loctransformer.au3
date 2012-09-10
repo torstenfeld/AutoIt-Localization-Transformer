@@ -70,6 +70,43 @@ Func _GetStringsFromArray()
 EndFunc
 
 ; #FUNCTION# ====================================================================================================================
+; Name ..........: _CheckForStringMarker
+; Description ...: checks if apostrophe or double quote is the first string marker in that line
+; Syntax ........: _CheckForStringMarker($lStringToTest)
+; Parameters ....: $lStringToTest       - An unknown value.
+; Return values .: empty, if neither apostrophe nor double quote was found
+;					char which was found first
+; Author ........: Torsten Feld
+; Modified ......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _CheckForStringMarker($lStringToTest)
+
+	local $lStringLength = StringLen($lStringToTest) ; get length of string
+
+	local $lPositionApostropheFound = StringInStr($lStringToTest, "'") ; search for first occurence of apostrophe
+	if $lPositionApostropheFound = 0 then $lPositionApostropheFound = $lStringLength + 1 ; if apostrophe not found, set occurence to string lenght +1
+
+	local $lPositionQuoteFound = StringInStr($lStringToTest, '"') ; search for first occurence of double quote
+	if $lPositionQuoteFound = 0 then $lPositionQuoteFound = $lStringLength + 1 ; if double quote not found, set occurence to string lenght +1
+
+	Select
+		case $lPositionApostropheFound = $lPositionQuoteFound ; if neither apostrophe nor double quote was found
+			Return "" ; return empty string
+		case $lPositionApostropheFound > $lPositionQuoteFound ; if double quote occurs earlier than apostrophe
+			Return '"' ; return double quote
+		case $lPositionApostropheFound < $lPositionQuoteFound ; if apostrophe occurs earlier than double quote
+			Return "'" ; return apostrophe
+		case Else ; if something weird happend
+			Return "" ; return empty string
+	EndSelect
+
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
 ; Name ..........: _GetFileFromUser
 ; Description ...: Asks user for au3 file which is stored to $gFileToTransform
 ; Syntax ........: _GetFileFromUser()
