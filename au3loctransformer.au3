@@ -72,6 +72,8 @@ Func _GetStringsFromArray()
 	local $laStringsLine
 	local $lStringMarker ; apostroph or double quote
 	local $lFuncName = ""; the name of the function in which the string was found
+	local $lFuncNameTemp = ""
+	local $lCountForIds = 1
 
 	for $i = 1 to $gaListofFileLines[0]
 
@@ -81,6 +83,7 @@ Func _GetStringsFromArray()
 			case StringRegExp($gaListofFileLines[$i], "^Func\s([_\w\d]*\(.*\))") ; check for line with func start and store name of func in $lFuncName
 				$lFuncName = StringRegExpReplace($gaListofFileLines[$i], "^Func\s([_\w\d]*\(.*\)).*", "$1") ; get complete function name
 				if StringRegExpReplace($lFuncName, ".*\((.*)\).*", "$1") <> "" then $lFuncName = StringReplace($lFuncName, StringRegExpReplace($lFuncName, ".*\((.*)\).*", "$1"), "") ; remove parameters of function name
+				$lFuncName = StringReplace($lFuncName, "()", "") ; removes brackets of function name
 				ContinueLoop
 			case StringInStr($gaListofFileLines[$i], "MsgBox(") ; search for msgbox strings
 			case StringInStr($gaListofFileLines[$i], "guictrlbutton(") ; search for button labels
@@ -96,11 +99,38 @@ Func _GetStringsFromArray()
 		EndIf
 
 		for $j = 0 to UBound($laStringsLine)-1
-			_Array2DAdd($gaListOfStrings, $laStringsLine[$j] & "|" & $lFuncName)
+			if $lFuncNameTemp = $lFuncName Then ; if $lFuncName is the same as in the previous step
+				$lCountForIds += 1 ; increase $lCountForIds by 1
+			Else ; if not
+				$lFuncNameTemp = $lFuncName ; set $lFuncNameTemp with the new $lFuncName
+				$lCountForIds = 1 ; reset to 1
+			EndIf
+			_Array2DAdd($gaListOfStrings, $laStringsLine[$j] & "|" & _CreateStringId($lFuncName, $lCountForIds))
 		Next
 	Next
 	_ArrayDelete($gaListOfStrings, 0) ; delete 0-index
 	_ArrayDisplay($gaListOfStrings, "$gaListOfStrings")
+
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _CreateStringId
+; Description ...: creates the ID for the string written to array / ini file
+; Syntax ........: _CreateStringId($lFuncName, $lNumber[, $lPrefix = "IDS_"])
+; Parameters ....: $lFuncName           - name of the function in which the string occurs
+;                  $lNumber             - auto incremented number if more than one string is found in a function
+;                  $lPrefix             - [optional] Prefix for the String ID. Default is "IDS_".
+; Return values .: complete string ID
+; Author ........: Torsten Feld
+; Modified ......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func _CreateStringId($lFuncName, $lNumber, $lPrefix = "IDS_")
+
+	Return $lPrefix & $lFuncName & "_" & $lNumber
 
 EndFunc
 
