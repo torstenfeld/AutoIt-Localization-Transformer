@@ -53,6 +53,7 @@
 
 Func _Main()
 
+	ConsoleWrite(@AutoItVersion & @CRLF)
 ;~ 	_GetFileFromUser()
 	$gFileToTransform = @ScriptDir & "\testfile.au3"
 
@@ -60,7 +61,6 @@ Func _Main()
 ;~ 	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
 	_GetStringsFromArray()
 	_GuiListOfStrings()
-;~ 	_WriteStringToLocalizationIni()
 
 EndFunc
 
@@ -69,7 +69,7 @@ Func _WriteStringToLocalizationIni()
 	_WriteDebug("INFO;_WriteStringToLocalizationIni;_WriteStringToLocalizationIni started")
 
 	for $i = 0 to UBound($gaListOfStrings)-1
-		IniWrite($gFileIniWithStrings, "0000", "IDS_" & $i, $gaListOfStrings[$i])
+		IniWrite($gFileIniWithStrings, "0000", $gaListOfStrings[$i][0], $gaListOfStrings[$i][1])
 	Next
 
 	_WriteDebug("INFO;_WriteStringToLocalizationIni;_WriteStringToLocalizationIni ended")
@@ -172,12 +172,9 @@ Func _GuiListOfStrings()
 		$nMsg = GUIGetMsg()
 		Switch $nMsg
 			Case $GUI_EVENT_CLOSE, $Button_Close
-				_ArrayDisplay($gaListOfStrings, "vorher")
-				_FileWriteFromArray($gDirTemp & "\vorher.txt", $gaListOfStrings)
 				_RemoveUncheckedItemsOfListview()
 				$gaListOfStrings = _GUICtrlListView_CreateArray($ListView_Strings)
-;~ 				_FileWriteFromArray($gDirTemp & "\nachher.txt", $gaListOfStrings, 1)
-				_ArrayDisplay($gaListOfStrings, "nachher")
+				_WriteStringToLocalizationIni()
 				GUIDelete($Form_ListStrings)
 				_WriteDebug("INFO;_GuiListOfStrings;$Form_ListStrings deleted")
 				ExitLoop
