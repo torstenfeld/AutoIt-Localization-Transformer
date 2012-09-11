@@ -12,6 +12,14 @@
 	#Include <Array.au3>
 	#Include <String.au3>
 
+	#include <ButtonConstants.au3>
+	#include <EditConstants.au3>
+	#include <GUIConstantsEx.au3>
+	#include <ListViewConstants.au3>
+	#include <StaticConstants.au3>
+	#include <WindowsConstants.au3>
+	#include <GuiListView.au3>
+
 #EndRegion
 
 #region ### global variables
@@ -88,6 +96,38 @@ Func _GetStringsFromArray()
 	Next
 	_ArrayDelete($gaListOfStrings, 0) ; delete 0-index
 ;~ 	_ArrayDisplay($gaListOfStrings, "$gaListOfStrings")
+
+EndFunc
+
+Func _GuiListOfStrings()
+
+	_WriteDebug("INFO;_GuiListOfStrings;_GuiListOfStrings started")
+
+	#Region ### START Koda GUI section ### Form=
+	$Form_ListStrings = GUICreate("Form1", 615, 377, 192, 124)
+	$ListView_Strings = GUICtrlCreateListView("", 8, 64, 601, 233)
+	GUICtrlSendMsg(-1, $LVM_SETCOLUMNWIDTH, 0, 50)
+	$Label_Desc = GUICtrlCreateLabel("blablabla text", 8, 16, 66, 17)
+	$Input_String = GUICtrlCreateInput("", 8, 312, 249, 21)
+	$Button_Modify = GUICtrlCreateButton("Modify", 264, 312, 75, 25)
+	$Button_Close = GUICtrlCreateButton("Close", 8, 344, 603, 25)
+	GUISetState(@SW_SHOW)
+	#EndRegion ### END Koda GUI section ###
+
+	While 1
+		$nMsg = GUIGetMsg()
+		Switch $nMsg
+			Case $GUI_EVENT_CLOSE, $Button_Close
+				GUIDelete($Form_ListStrings)
+				_WriteDebug("INFO;_GuiListOfStrings;$Form_ListStrings deleted")
+				ExitLoop
+			case $Button_Modify
+
+		EndSwitch
+	WEnd
+
+
+	_WriteDebug("INFO;_GuiListOfStrings;_GuiListOfStrings ended")
 
 EndFunc
 
