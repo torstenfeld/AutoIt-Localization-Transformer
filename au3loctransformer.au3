@@ -45,6 +45,8 @@
 
 #Region ### main
 
+	if not FileExists($gDirTemp) then DirCreate($gDirTemp)
+
 	_Main()
 
 #EndRegion
@@ -105,6 +107,7 @@ Func _GetStringsFromArray()
 		EndIf
 
 		for $j = 0 to UBound($laStringsLine)-1
+			if StringLeft($lFuncName, 1) = "_" Then $lFuncName = StringTrimLeft($lFuncName, 1) ; remove first _ from function name
 			if $lFuncNameTemp = $lFuncName Then ; if $lFuncName is the same as in the previous step
 				$lCountForIds += 1 ; increase $lCountForIds by 1
 			Else ; if not
@@ -158,25 +161,43 @@ Func _GuiListOfStrings()
 	_GUICtrlListView_SetExtendedListViewStyle($ListView_Strings, BitOR($LVS_EX_CHECKBOXES, $LVS_EX_FULLROWSELECT))
 
 	_GUICtrlListView_InsertColumn($ListView_Strings, 0, "IDS", 200)
-    _GUICtrlListView_InsertColumn($ListView_Strings, 1, "String", 400)
+    _GUICtrlListView_InsertColumn($ListView_Strings, 1, "String", 380)
 	_GUICtrlListView_AddArray($ListView_Strings, $gaListOfStrings)
+
+	for $i = 0 to _GUICtrlListView_GetItemCount($ListView_Strings)
+		_GUICtrlListView_SetItemChecked($ListView_Strings, $i)
+	Next
 
 	While 1
 		$nMsg = GUIGetMsg()
 		Switch $nMsg
 			Case $GUI_EVENT_CLOSE, $Button_Close
+				_ArrayDisplay($gaListOfStrings, "vorher")
+				_FileWriteFromArray($gDirTemp & "\vorher.txt", $gaListOfStrings)
+				_RemoveUncheckedItemsOfListview()
+				$gaListOfStrings = _GUICtrlListView_CreateArray($ListView_Strings)
+;~ 				_FileWriteFromArray($gDirTemp & "\nachher.txt", $gaListOfStrings, 1)
+				_ArrayDisplay($gaListOfStrings, "nachher")
 				GUIDelete($Form_ListStrings)
 				_WriteDebug("INFO;_GuiListOfStrings;$Form_ListStrings deleted")
 				ExitLoop
 			case $Button_Modify
-;~ 				GUICtrlRead($Input_String)
 				_GUICtrlListView_SetItemText($ListView_Strings, $gListViewItemSelected, GUICtrlRead($Input_String))
 
 		EndSwitch
 	WEnd
-
-
 	_WriteDebug("INFO;_GuiListOfStrings;_GuiListOfStrings ended")
+
+EndFunc
+
+Func _RemoveUncheckedItemsOfListview()
+
+	for $i = _GUICtrlListView_GetItemCount($ListView_Strings) to 0 Step -1
+		if not _GUICtrlListView_GetItemChecked($ListView_Strings, $i) then
+			_GUICtrlListView_DeleteItem($ListView_Strings, $i)
+			_WriteDebug("INFO;_RemoveUncheckedItemsOfListview;deleted item " & _GUICtrlListView_GetItemText($ListView_Strings, $i) & " with index " & $i)
+		EndIf
+	Next
 
 EndFunc
 
@@ -646,6 +667,59 @@ Func _ReadAu3FileToArray()
 
 EndFunc
 
+; #FUNCTION# =========================================================================================================
+; Name...........: _GUICtrlListView_CreateArray()
+; Description ...: Creates a 2-dimensional array from a lisview.
+; Syntax.........: _GUICtrlListView_CreateArray($hListView, [$sDelimeter = "|"])
+; Parameters ....: $hListView - Handle of the ListView.
+;                  [Optional] $sDelimeter - One or more characters to use as delimiters (case sensitive). Default = "|"
+; Requirement(s).: v3.2.12.1 or higher & GUIListView.au3.
+; Return values .: Success - The array returned is two-dimensional and is made up as follows:
+;                                $aArray[0][0] = Number of rows
+;                                $aArray[0][1] = Number of columns
+;                                $aArray[0][3] = Delimited string of the column name(s) e.g. Column 1|Column 2|Column 3|Column nth
+;                                $aArray[1][0] = 1st row, 1st column
+;                                $aArray[1][1] = 1st row, 2nd column
+;                                $aArray[n][0] = nth row, 1st column
+;                                $aArray[n][1] = nth row, 2nd column
+;                                $aArray[n][1] = nth row, 3rd column
+;                  Failure - Returns array with @error = 1 if the number of rows is equal to 0
+; Author ........: guinness
+; Example........; Yes
+;=====================================================================================================================
+Func _GUICtrlListView_CreateArray($hListView, $sDelimeter = "|")
+    Local $aColumns, $iDim = 0, $iError = 0, $sIndex, $sSubItem
+    Local $iColumnCount = _GUICtrlListView_GetColumnCount($hListView)
+    Local $iItemCount = _GUICtrlListView_GetItemCount($hListView)
+    If $iColumnCount < 3 Then
+        $iDim = 3 - $iColumnCount
+    EndIf
+    Local $aReturn[$iItemCount + 1][$iColumnCount + $iDim] = [[$iItemCount, $iColumnCount, ""]]
+
+    For $A = 0 To $iColumnCount - 1
+        $aColumns = _GUICtrlListView_GetColumn($hListView, $A)
+        If $A = $iColumnCount - 1 Then
+            $sDelimeter = ""
+        EndIf
+        $aReturn[0][2] &= $aColumns[5] & $sDelimeter
+    Next
+
+    For $A = 0 To $iItemCount - 1
+        $sIndex = _GUICtrlListView_GetItemText($hListView, $A)
+        $aReturn[$A + 1][0] = $sIndex
+        If $iColumnCount > 0 Then
+            For $B = 1 To $iColumnCount - 1
+                $sSubItem = _GUICtrlListView_GetItemText($hListView, $A, $B)
+                $aReturn[$A + 1][$B] = $sSubItem
+            Next
+        EndIf
+    Next
+    If $aReturn[0][0] = 0 Then
+        $iError = 1
+    EndIf
+    Return SetError($iError, 0, $aReturn)
+EndFunc   ;==>_GUICtrlListView_CreateArray
+
 Func _Array2DAdd(ByRef $avArray, $sValue = '')
 ;~ 	Return 			Succes -1
 ;~ 	Failure			0 and set @error
@@ -679,7 +753,6 @@ Func _Array2DAdd(ByRef $avArray, $sValue = '')
 	EndIf
 	Return -1
 EndFunc   ;==>_Array2DAdd
-
 
 Func _WriteDebug($lParam) ; $lType, $lFunc, $lString) ; creates debuglog for analyzing problems
 	Local $lArray[4]
