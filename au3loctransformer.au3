@@ -35,7 +35,7 @@
 	Global $gFileToTransform ; au3 file incl. path
 	Global $gFileToWriteOutput ; copy of au3 file with exchanged strings
 
-	Global $gaListOfStrings[1][2] ; list of strings found
+	Global $gaListOfStrings[1][3] ; list of strings found
 	Global $gaListofFileLines ; stores the lines of $gFileToTransform
 
 	Global $gListViewItemSelected ; index of the item selected in $ListView_Strings
@@ -92,6 +92,8 @@ Func _GetStringsFromArray()
 	local $lFuncNameTemp = ""
 	local $lCountForIds = 1
 
+	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
+
 	for $i = 1 to $gaListofFileLines[0]
 
 		$lStringMarker = _CheckForStringMarker($gaListofFileLines[$i])
@@ -125,7 +127,7 @@ Func _GetStringsFromArray()
 				$lFuncNameTemp = $lFuncName ; set $lFuncNameTemp with the new $lFuncName
 				$lCountForIds = 1 ; reset to 1
 			EndIf
-			_Array2DAdd($gaListOfStrings, _CreateStringId($lFuncName, $lCountForIds) & "|" & $laStringsLine[$j])
+			_Array2DAdd($gaListOfStrings, _CreateStringId($lFuncName, $lCountForIds) & "|" & $laStringsLine[$j] & "|" & $i)
 		Next
 	Next
 	_ArrayDelete($gaListOfStrings, 0) ; delete 0-index
@@ -172,7 +174,8 @@ Func _GuiListOfStrings()
 	_GUICtrlListView_SetExtendedListViewStyle($ListView_Strings, BitOR($LVS_EX_CHECKBOXES, $LVS_EX_FULLROWSELECT))
 
 	_GUICtrlListView_InsertColumn($ListView_Strings, 0, "IDS", 200)
-    _GUICtrlListView_InsertColumn($ListView_Strings, 1, "String", 380)
+    _GUICtrlListView_InsertColumn($ListView_Strings, 1, "String", 320)
+    _GUICtrlListView_InsertColumn($ListView_Strings, 2, "Line", 60)
 	_GUICtrlListView_AddArray($ListView_Strings, $gaListOfStrings)
 
 	for $i = 0 to _GUICtrlListView_GetItemCount($ListView_Strings)
@@ -640,11 +643,11 @@ EndFunc
 ; ===============================================================================================================================
 Func _GetFileFromUser()
 
-	$gFileToTransform = FileOpenDialog($gMsgBoxTitle, "", "AutoIT Script (*.au3)", 3) ; ask for au3 file
-	if @error Then ; if error occurs in FileOpenDialog
-		_WriteDebug("ERR ;_GetFileFromUser;FileOpenDialog failed with error: " & @error & " - exiting") ; write debug entry
-		Exit 1 ; exit with code 1
-	EndIf
+;~ 	$gFileToTransform = FileOpenDialog($gMsgBoxTitle, "", "AutoIT Script (*.au3)", 3) ; ask for au3 file
+;~ 	if @error Then ; if error occurs in FileOpenDialog
+;~ 		_WriteDebug("ERR ;_GetFileFromUser;FileOpenDialog failed with error: " & @error & " - exiting") ; write debug entry
+;~ 		Exit 1 ; exit with code 1
+;~ 	EndIf
 
 	$gFileToTransform = @ScriptDir & "\testfile.au3"
 
