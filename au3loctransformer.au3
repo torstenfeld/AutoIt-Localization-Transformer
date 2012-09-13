@@ -46,6 +46,7 @@
 #Region ### main
 
 	if not FileExists($gDirTemp) then DirCreate($gDirTemp)
+	if FileExists($gDbgFile) then FileDelete($gDbgFile)
 
 	_Main()
 
