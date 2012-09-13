@@ -71,6 +71,12 @@ Func _WriteStringToLocalizationIni()
 
 	_WriteDebug("INFO;_WriteStringToLocalizationIni;_WriteStringToLocalizationIni started")
 
+	if not FileExists($gFileIniWithStrings) Then
+		Local $file = FileOpen($gFileIniWithStrings, 32+2)
+		FileClose($file)
+		_WriteDebug("INFO;_WriteStringToLocalizationIni;file does not exist, was created as unicode")
+	EndIf
+
 	for $i = 1 to UBound($gaListOfStrings)-1 ; count from 1 as in 0 index is the amount of strings / array size
 		IniWrite($gFileIniWithStrings, "0000", $gaListOfStrings[$i][0], $gaListOfStrings[$i][1])
 	Next
