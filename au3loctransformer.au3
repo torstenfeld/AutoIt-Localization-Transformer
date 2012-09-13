@@ -94,6 +94,8 @@ Func _GetStringsFromArray()
 				if StringRegExpReplace($lFuncName, ".*\((.*)\).*", "$1") <> "" then $lFuncName = StringReplace($lFuncName, StringRegExpReplace($lFuncName, ".*\((.*)\).*", "$1"), "") ; remove parameters of function name
 				$lFuncName = StringReplace($lFuncName, "()", "") ; removes brackets of function name
 				ContinueLoop
+			case StringRegExp($gaListofFileLines[$i], "^;.*") ; if it's a comment
+				ContinueLoop
 			case StringInStr($gaListofFileLines[$i], "MsgBox(") ; search for msgbox strings
 			case StringInStr($gaListofFileLines[$i], "guictrlbutton(") ; search for button labels
 			case StringInStr($gaListofFileLines[$i], "GUICtrlSetTip(") ; search for gui tips
