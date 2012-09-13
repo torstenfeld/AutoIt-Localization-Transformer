@@ -28,6 +28,8 @@
 	Global $gDbgFile = $gDirTemp & "\au3loctranformer.log"
 	Global $gFileIniWithStrings = @ScriptDir & "\localization.ini" ; ini file with strings and corresponding properties
 
+;~ 	Global $gScriptAndIniFilePath ; path to the script chosen where ini will be stored
+
 	Global $gMsgBoxTitle = "Au3 Localization Transformer"
 
 	Global $gFileToTransform ; au3 file incl. path
@@ -55,8 +57,8 @@
 Func _Main()
 
 	ConsoleWrite(@AutoItVersion & @CRLF)
-;~ 	_GetFileFromUser()
-	$gFileToTransform = @ScriptDir & "\testfile.au3"
+	_GetFileFromUser()
+;~ 	$gFileToTransform = @ScriptDir & "\testfile.au3"
 
 	_ReadAu3FileToArray()
 ;~ 	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
@@ -69,7 +71,7 @@ Func _WriteStringToLocalizationIni()
 
 	_WriteDebug("INFO;_WriteStringToLocalizationIni;_WriteStringToLocalizationIni started")
 
-	for $i = 0 to UBound($gaListOfStrings)-1
+	for $i = 1 to UBound($gaListOfStrings)-1 ; count from 1 as in 0 index is the amount of strings / array size
 		IniWrite($gFileIniWithStrings, "0000", $gaListOfStrings[$i][0], $gaListOfStrings[$i][1])
 	Next
 
@@ -637,6 +639,12 @@ Func _GetFileFromUser()
 		_WriteDebug("ERR ;_GetFileFromUser;FileOpenDialog failed with error: " & @error & " - exiting") ; write debug entry
 		Exit 1 ; exit with code 1
 	EndIf
+
+	$gFileToTransform = @ScriptDir & "\testfile.au3"
+
+	local $szDrive, $szDir, $szFName, $szExt
+	_PathSplit($gFileToTransform, $szDrive, $szDir, $szFName, $szExt)
+	$gFileIniWithStrings = $szDrive & $szDir & $szFName & "_StringTable.ini"
 
 EndFunc
 
