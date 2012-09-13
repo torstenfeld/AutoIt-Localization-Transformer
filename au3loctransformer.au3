@@ -11,6 +11,7 @@
 	#Include <File.au3>
 	#Include <Array.au3>
 	#Include <String.au3>
+	#include <WinAPI.au3>
 
 	#include <ButtonConstants.au3>
 	#include <EditConstants.au3>
@@ -58,12 +59,13 @@ Func _Main()
 
 	ConsoleWrite(@AutoItVersion & @CRLF)
 	_GetFileFromUser()
-;~ 	$gFileToTransform = @ScriptDir & "\testfile.au3"
+	$gFileToTransform = @ScriptDir & "\testfile.au3"
 
 	_ReadAu3FileToArray()
 ;~ 	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
 	_GetStringsFromArray()
 	_GuiListOfStrings()
+	_WriteLocFileAu3()
 
 EndFunc
 
@@ -91,8 +93,6 @@ Func _GetStringsFromArray()
 	local $lFuncName = ""; the name of the function in which the string was found
 	local $lFuncNameTemp = ""
 	local $lCountForIds = 1
-
-	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
 
 	for $i = 1 to $gaListofFileLines[0]
 
@@ -131,6 +131,31 @@ Func _GetStringsFromArray()
 		Next
 	Next
 	_ArrayDelete($gaListOfStrings, 0) ; delete 0-index
+EndFunc
+
+Func _WriteLocFileAu3()
+
+	Local $file = FileOpen($gFileToWriteOutput, 32+2)
+
+	local $laArrayFindAllResult
+;~ 	_ArrayDisplay($gaListOfStrings, "$gaListOfStrings")
+	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
+	for $i = 1 to $gaListofFileLines[0]
+;~ 		$laArrayFindAllResult = _ArrayFindAll($gaListOfStrings, $i, 1, 0, 0, 2, 2)
+		$laArrayFindAllResult = _ArrayFindAll($gaListOfStrings, $i, 1, 0, 0, 2, 2)
+;~ 		if @error Then MsgBox(16, $gMsgBoxTitle, "error in _ArrayFindAll: " & @error)
+;~ 		MsgBox(16, $gMsgBoxTitle, "$gaListOfStrings[$i][2]: " & $gaListOfStrings[$i][2])
+;~ 		if IsArray($laArrayFindAllResult) Then
+			_ArrayDisplay($laArrayFindAllResult, "$laArrayFindAllResult")
+;~ 		EndIf
+;~ 		ContinueLoop
+
+		FileWriteLine($file, $gaListofFileLines[$i])
+
+	Next
+
+	FileClose($file)
+
 EndFunc
 
 ; #FUNCTION# ====================================================================================================================
@@ -654,6 +679,7 @@ Func _GetFileFromUser()
 	local $szDrive, $szDir, $szFName, $szExt
 	_PathSplit($gFileToTransform, $szDrive, $szDir, $szFName, $szExt)
 	$gFileIniWithStrings = $szDrive & $szDir & $szFName & "_StringTable.ini"
+	$gFileToWriteOutput = $szDrive & $szDir & $szFName & "_loc" & $szExt
 
 EndFunc
 
