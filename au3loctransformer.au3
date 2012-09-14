@@ -113,6 +113,38 @@ Func _GetStringsFromArray()
 				$lType = "BTN"
 			case StringInStr($gaListofFileLines[$i], "GUICtrlSetTip(") ; search for gui tips
 				$lType = "TIP"
+			case StringInStr($gaListofFileLines[$i], "GUICtrlCreateLabel(") ; search for gui labels
+				$lType = "LAB"
+			case StringInStr($gaListofFileLines[$i], "GUICtrlCreateCheckbox(") ; search for gui checkboxes
+				$lType = "CHK"
+			case StringInStr($gaListofFileLines[$i], "GUICtrlCreateInput(") ; search for gui input
+				$lType = "INP"
+			case StringInStr($gaListofFileLines[$i], "GUICtrlCreateRadio(") ; search for gui radio buttons
+				$lType = "RAD"
+			case StringInStr($gaListofFileLines[$i], "GUICtrlCreateGroup(") ; search for gui groups
+				$lType = "GRP"
+			case StringInStr($gaListofFileLines[$i], "GUICtrlCreateTabItem(") ; search for gui tabs
+				$lType = "TAB"
+			case StringInStr($gaListofFileLines[$i], "ToolTip(") ; search for tray tool tips
+				$lType = "TTP"
+			case StringInStr($gaListofFileLines[$i], "GUICtrlSetData(") ; search for gui data set
+				$lType = "SDA"
+			case StringInStr($gaListofFileLines[$i], "InputBox(") ; search for gui input boxes
+				$lType = "IBO"
+			case StringInStr($gaListofFileLines[$i], "GUICreate(") ; search for gui forms
+				$lType = "GUI"
+			case StringInStr($gaListofFileLines[$i], "GUICtrlCreateEdit(") ; search for gui edit boxes
+				$lType = "EDI"
+			case StringInStr($gaListofFileLines[$i], "SplashTextOn(") ; search for splash texts
+				$lType = "SPL"
+			case StringInStr($gaListofFileLines[$i], "ControlSetText(") ; search for changes to splash texts
+				$lType = "SPC"
+			case StringInStr($gaListofFileLines[$i], "FileSelectFolder(") ; search for file select folder
+				$lType = "FSF"
+			case StringInStr($gaListofFileLines[$i], "ProgressOn(") ; search for progress bars
+				$lType = "PRO"
+			case StringInStr($gaListofFileLines[$i], "ProgressSet(") ; search for progress bar changes
+				$lType = "PRS"
 			case StringRegExp($gaListofFileLines[$i], "\$.*\=") ; search for strings which are
 				$lType = "VAR"
 			case Else ; skip everything else
