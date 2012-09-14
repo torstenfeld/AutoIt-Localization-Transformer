@@ -135,26 +135,31 @@ EndFunc
 
 Func _WriteLocFileAu3()
 
-	Local $file = FileOpen($gFileToWriteOutput, 32+2)
+;~ 	Local $file = FileOpen($gFileToWriteOutput, 32+2) ; open file in unicode mode
 
 	local $laArrayFindAllResult
-;~ 	_ArrayDisplay($gaListOfStrings, "$gaListOfStrings")
-	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
+;~ 	local $laHelperArray[$gaListOfStrings[0][0]+1] ; create helper array as _ArrayFindAll does not work with 2d array even if it should
+
+;~ 	$laHelperArray[0] = $gaListOfStrings[0][0] ; copy size of array
+;~ 	for $i = 1 to $gaListOfStrings[0][0]
+;~ 		$laHelperArray[$i] = $gaListOfStrings[$i][2]
+;~ 	Next
+
 	for $i = 1 to $gaListofFileLines[0]
-;~ 		$laArrayFindAllResult = _ArrayFindAll($gaListOfStrings, $i, 1, 0, 0, 2, 2)
-		$laArrayFindAllResult = _ArrayFindAll($gaListOfStrings, $i, 1, 0, 0, 2, 2)
+		$laArrayFindAllResult = __ArrayFindAll($gaListOfStrings, $i, 1, 0, 0, 3, 3)
+;~ 		$laArrayFindAllResult = __ArrayFindAll($laHelperArray, $i, 1, 0, 0, 3)
 ;~ 		if @error Then MsgBox(16, $gMsgBoxTitle, "error in _ArrayFindAll: " & @error)
 ;~ 		MsgBox(16, $gMsgBoxTitle, "$gaListOfStrings[$i][2]: " & $gaListOfStrings[$i][2])
 ;~ 		if IsArray($laArrayFindAllResult) Then
-			_ArrayDisplay($laArrayFindAllResult, "$laArrayFindAllResult")
+			_ArrayDisplay($laArrayFindAllResult, "$i: " & $i & " - $laArrayFindAllResult")
 ;~ 		EndIf
 ;~ 		ContinueLoop
 
-		FileWriteLine($file, $gaListofFileLines[$i])
+;~ 		FileWriteLine($file, $gaListofFileLines[$i])
 
 	Next
 
-	FileClose($file)
+;~ 	FileClose($file)
 
 EndFunc
 
@@ -796,6 +801,163 @@ Func _Array2DAdd(ByRef $avArray, $sValue = '')
 	EndIf
 	Return -1
 EndFunc   ;==>_Array2DAdd
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _ArrayFindAll
+; Description ...: Find the indices of all ocurrences of a search query between two points in a 1D or 2D array using _ArraySearch().
+; Syntax.........: _ArrayFindAll(Const ByRef $avArray, $vValue[, $iStart = 0[, $iEnd = 0[, $iCase = 0[, $iPartial = 0[, $iSubItem = 0]]]]])
+; Parameters ....: $avArray  - The array to search
+;                  $vValue   - What to search $avArray for
+;                  $iStart   - [optional] Index of array to start searching at
+;                  $iEnd     - [optional] Index of array to stop searching at
+;                  $iCase    - [optional] If set to 1, search is case sensitive
+;                  $iCompare - [optional] 0 AutoIt variables compare (default), "string" = 0, "" = 0  or "0" = 0 match
+;                                         1 executes a partial search (StringInStr)
+;                                         2 comparison match if variables have same type and same value
+;                  $iSubItem - [optional] Sub-index to search on in 2D arrays
+; Return values .: Success - An array of all index numbers in array containing $vValue
+;                  Failure - -1, sets @error (see _ArraySearch() description for error codes)
+; Author ........: GEOSoft, Ultima
+; Modified.......: Torsten Feld
+; Remarks .......:
+; Related .......: _ArrayBinarySearch, _ArraySearch
+; Link ..........:
+; Example .......: Yes
+; ===============================================================================================================================
+Func __ArrayFindAll(Const ByRef $avArray, $vValue, $iStart = 0, $iEnd = 0, $iCase = 0, $iCompare = 0, $iSubItem = 0)
+	$iStart = __ArraySearch($avArray, $vValue, $iStart, $iEnd, $iCase, $iCompare, 1, $iSubItem)
+	If @error Then Return SetError(@error, 0, -1)
+
+	Local $iIndex = 0, $avResult[UBound($avArray)]
+	Do
+		$avResult[$iIndex] = $iStart
+		$iIndex += 1
+		$iStart = __ArraySearch($avArray, $vValue, $iStart + 1, $iEnd, $iCase, $iCompare, 1, $iSubItem)
+	Until @error
+
+	ReDim $avResult[$iIndex]
+	Return $avResult
+EndFunc   ;==>_ArrayFindAl
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: __ArraySearch
+; Description ...: Finds an entry within a 1D or 2D array. Similar to _ArrayBinarySearch(), except that the array does not need to be sorted.
+; Syntax.........: __ArraySearch(Const ByRef $avArray, $vValue[, $iStart = 0[, $iEnd = 0[, $iCase = 0[, $iPartial = 0[, $iForward = 1[, $iSubItem = -1]]]]]])
+; Parameters ....: $avArray  - The array to search
+;                  $vValue   - What to search $avArray for
+;                  $iStart   - [optional] Index of array to start searching at
+;                  $iEnd     - [optional] Index of array to stop searching at
+;                  $iCase    - [optional] If set to 1, search is case sensitive
+;                  $iCompare - [optional] 0 AutoIt variables compare (default), "string" = 0, "" = 0  or "0" = 0 match
+;                                         1 executes a partial search (StringInStr)
+;                                         2 comparison match if variables have same type and same value
+;                                         3 whole string has to be matched (Torsten Feld)
+;                  $iForward - [optional] If set to 0, searches the array from end to beginning (instead of beginning to end)
+;                  $iSubItem - [optional] Sub-index to search on in 2D arrays
+; Return values .: Success - The index that $vValue was found at
+;                  Failure - -1, sets @error:
+;                  |1 - $avArray is not an array
+;                  |2 - $avArray is not a 1 or 2 dimensional array
+;                  |4 - $iStart is greater than $iEnd
+;                  |6 - $vValue was not found in array
+;                  |7 - $avArray has too many dimensions
+; Author ........: SolidSnake <MetalGX91 at GMail dot com>
+; Modified.......: gcriaco <gcriaco at gmail dot com>, Ultima - 2D arrays supported, directional search, code cleanup, optimization, Torsten Feld
+; Remarks .......: This function might be slower than _ArrayBinarySearch() but is useful when the array's order can't be altered.
+; Related .......: _ArrayBinarySearch, _ArrayFindAll
+; Link ..........:
+; Example .......: Yes
+; ===============================================================================================================================
+Func __ArraySearch(Const ByRef $avArray, $vValue, $iStart = 0, $iEnd = 0, $iCase = 0, $iCompare = 0, $iForward = 1, $iSubItem = -1)
+	If Not IsArray($avArray) Then Return SetError(1, 0, -1)
+	If UBound($avArray, 0) > 2 Or UBound($avArray, 0) < 1 Then Return SetError(2, 0, -1)
+
+	Local $iUBound = UBound($avArray) - 1
+
+	; Bounds checking
+	If $iEnd < 1 Or $iEnd > $iUBound Then $iEnd = $iUBound
+	If $iStart < 0 Then $iStart = 0
+	If $iStart > $iEnd Then Return SetError(4, 0, -1)
+
+	; Direction (flip if $iForward = 0)
+	Local $iStep = 1
+	If Not $iForward Then
+		Local $iTmp = $iStart
+		$iStart = $iEnd
+		$iEnd = $iTmp
+		$iStep = -1
+	EndIf
+
+	; same var Type of comparison
+	Local $iCompType = False
+	If $iCompare = 2 Then
+		$iCompare = 0
+		$iCompType = True
+	EndIf
+
+	; Search
+	Switch UBound($avArray, 0)
+		Case 1 ; 1D array search
+			If Not $iCompare Then
+				If Not $iCase Then
+					For $i = $iStart To $iEnd Step $iStep
+						If $iCompType And VarGetType($avArray[$i]) <> VarGetType($vValue) Then ContinueLoop
+						If $avArray[$i] = $vValue Then Return $i
+					Next
+				Else
+					For $i = $iStart To $iEnd Step $iStep
+						If $iCompType And VarGetType($avArray[$i]) <> VarGetType($vValue) Then ContinueLoop
+						If $avArray[$i] == $vValue Then Return $i
+					Next
+				EndIf
+			ElseIf $iCompare = 1 Then
+				For $i = $iStart To $iEnd Step $iStep
+					If StringInStr($avArray[$i], $vValue, $iCase) > 0 Then Return $i
+				Next
+			Else
+				For $i = $iStart To $iEnd Step $iStep
+					If String($avArray[$i]) = String($vValue) Then Return $i
+				Next
+			EndIf
+		Case 2 ; 2D array search
+			Local $iUBoundSub = UBound($avArray, 2) - 1
+			If $iSubItem > $iUBoundSub Then $iSubItem = $iUBoundSub
+			If $iSubItem < 0 Then
+				; will search for all Col
+				$iSubItem = 0
+			Else
+				$iUBoundSub = $iSubItem
+			EndIf
+
+			For $j = $iSubItem To $iUBoundSub
+				If Not $iCompare Then
+					If Not $iCase Then
+						For $i = $iStart To $iEnd Step $iStep
+							If $iCompType And VarGetType($avArray[$i][$j]) <> VarGetType($vValue) Then ContinueLoop
+							If $avArray[$i][$j] = $vValue Then Return $i
+						Next
+					Else
+						For $i = $iStart To $iEnd Step $iStep
+							If $iCompType And VarGetType($avArray[$i][$j]) <> VarGetType($vValue) Then ContinueLoop
+							If $avArray[$i][$j] == $vValue Then Return $i
+						Next
+					EndIf
+				ElseIf $iCompare = 1 Then
+					For $i = $iStart To $iEnd Step $iStep
+						If StringInStr($avArray[$i][$j], $vValue, $iCase) > 0 Then Return $i
+					Next
+				Else
+					For $i = $iStart To $iEnd Step $iStep
+						If String($avArray[$i][$j]) = String($vValue) Then Return $i
+					Next
+				EndIf
+			Next
+		Case Else
+			Return SetError(7, 0, -1)
+	EndSwitch
+
+	Return SetError(6, 0, -1)
+EndFunc   ;==>_ArraySearch
 
 Func _WriteDebug($lParam) ; $lType, $lFunc, $lString) ; creates debuglog for analyzing problems
 	Local $lArray[4]
