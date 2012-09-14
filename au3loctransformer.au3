@@ -36,7 +36,7 @@
 	Global $gFileToTransform ; au3 file incl. path
 	Global $gFileToWriteOutput ; copy of au3 file with exchanged strings
 
-	Global $gaListOfStrings[1][3] ; list of strings found
+	Global $gaListOfStrings[1][4] ; list of strings found
 	Global $gaListofFileLines ; stores the lines of $gFileToTransform
 
 	Global $gListViewItemSelected ; index of the item selected in $ListView_Strings
@@ -118,6 +118,7 @@ Func _GetStringsFromArray()
 			_WriteDebug("WARN;_GetStringsFromArray;_StringBetween returned with error: " & @error & " on string '" & StringReplace($gaListofFileLines[$i], ";", "") & "'")
 			ContinueLoop
 		EndIf
+;~ 		$laStringsLine = $lStringMarker & $laStringsLine & $lStringMarker ; re-add string markers for the replacement function (_WriteLocFileAu3) to work properly
 
 		for $j = 0 to UBound($laStringsLine)-1
 			if StringLeft($lFuncName, 1) = "_" Then $lFuncName = StringTrimLeft($lFuncName, 1) ; remove first _ from function name
@@ -127,7 +128,7 @@ Func _GetStringsFromArray()
 				$lFuncNameTemp = $lFuncName ; set $lFuncNameTemp with the new $lFuncName
 				$lCountForIds = 1 ; reset to 1
 			EndIf
-			_Array2DAdd($gaListOfStrings, _CreateStringId($lFuncName, $lCountForIds) & "|" & $laStringsLine[$j] & "|" & $i)
+			_Array2DAdd($gaListOfStrings, _CreateStringId($lFuncName, $lCountForIds) & "|" & $laStringsLine[$j] & "|" & $i & "|" & $lStringMarker)
 		Next
 	Next
 	_ArrayDelete($gaListOfStrings, 0) ; delete 0-index
@@ -137,13 +138,19 @@ Func _WriteLocFileAu3()
 
 	Local $file = FileOpen($gFileToWriteOutput, 32+2) ; open file in unicode mode
 
-	local $laArrayFindAllResult
+	local $laArrayFindAllResult, $lStringToReplace, $lReplaceString
+	_ArrayDisplay($gaListOfStrings, "$gaListOfStrings")
+	_ArrayDisplay($gaListofFileLines, "$gaListofFileLines")
 
 	for $i = 1 to $gaListofFileLines[0]
-		$laArrayFindAllResult = __ArrayFindAll($gaListOfStrings, $i, 1, 0, 0, 3, 3) ; check if there is more than one string per line
+		$laArrayFindAllResult = __ArrayFindAll($gaListOfStrings, $i, 1, 0, 0, 3, 2) ; check if there is more than one string per line
 		if IsArray($laArrayFindAllResult) then
 			for $j = 0 to UBound($laArrayFindAllResult)-1 ; replace string with _LR_GetString function
-				$gaListofFileLines[$i] = StringReplace($gaListofFileLines[$i], $gaListOfStrings[$laArrayFindAllResult[$j]][1], '_LR_GetString("' & $gaListOfStrings[$laArrayFindAllResult[$j]][0] & '")')
+				$lStringToReplace = $gaListOfStrings[$laArrayFindAllResult[$j]][3] & $gaListOfStrings[$laArrayFindAllResult[$j]][1] & $gaListOfStrings[$laArrayFindAllResult[$j]][3]
+				ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $lStringToReplace = ' & $lStringToReplace & @crlf & '>Error code: ' & @error & @crlf) ;### Debug Console
+				$lReplaceString = '_LR_GetString("' & $gaListOfStrings[$laArrayFindAllResult[$j]][0] & '")'
+				ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $lReplaceString = ' & $lReplaceString & @crlf & '>Error code: ' & @error & @crlf) ;### Debug Console
+				$gaListofFileLines[$i] = StringReplace($gaListofFileLines[$i], $lStringToReplace, $lReplaceString)
 			Next
 		EndIf
 
@@ -198,6 +205,7 @@ Func _GuiListOfStrings()
 	_GUICtrlListView_InsertColumn($ListView_Strings, 0, "IDS", 200)
     _GUICtrlListView_InsertColumn($ListView_Strings, 1, "String", 320)
     _GUICtrlListView_InsertColumn($ListView_Strings, 2, "Line", 60)
+    _GUICtrlListView_InsertColumn($ListView_Strings, 3, "Marker", 20)
 	_GUICtrlListView_AddArray($ListView_Strings, $gaListOfStrings)
 
 	for $i = 0 to _GUICtrlListView_GetItemCount($ListView_Strings)
