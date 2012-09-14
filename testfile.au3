@@ -38,6 +38,7 @@ AutoItSetOption("TrayIconDebug", 1)
 	#include ".\incs\NTErrors.au3"
 	#include ".\incs\APIConstants.au3"
 	#include ".\incs\WinAPIEx.au3"
+	#include ".\locudf\Localization.au3"
 
 #endregion
 
