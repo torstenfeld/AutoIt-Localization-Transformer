@@ -27,7 +27,7 @@
 
 	Global $gDirTemp = @TempDir & "\au3loctranformer"
 	Global $gDbgFile = $gDirTemp & "\au3loctranformer.log"
-	Global $gFileIniWithStrings = @ScriptDir & "\localization.ini" ; ini file with strings and corresponding properties
+	Global $gFileIniWithStrings ; ini file with strings and corresponding properties
 
 ;~ 	Global $gScriptAndIniFilePath ; path to the script chosen where ini will be stored
 
@@ -681,10 +681,10 @@ Func _GetFileFromUser()
 
 	$gFileToTransform = @ScriptDir & "\testfile.au3"
 
-	local $szDrive, $szDir, $szFName, $szExt
+	local $szDrive, $szDir, $szFName, $szExt, $lStringForLocFileName = "_loc"
 	_PathSplit($gFileToTransform, $szDrive, $szDir, $szFName, $szExt)
-	$gFileIniWithStrings = $szDrive & $szDir & $szFName & "_StringTable.ini"
-	$gFileToWriteOutput = $szDrive & $szDir & $szFName & "_loc" & $szExt
+	$gFileIniWithStrings = $szDrive & $szDir & $szFName & $lStringForLocFileName & "_StringTable.ini"
+	$gFileToWriteOutput = $szDrive & $szDir & $szFName & $lStringForLocFileName & $szExt
 
 EndFunc
 
