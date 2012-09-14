@@ -92,6 +92,7 @@ Func _GetStringsFromArray()
 	local $lStringMarker ; apostroph or double quote
 	local $lFuncName = ""; the name of the function in which the string was found
 	local $lFuncNameTemp = ""
+	local $lType = ""
 	local $lCountForIds = 1
 
 	for $i = 1 to $gaListofFileLines[0]
@@ -107,8 +108,13 @@ Func _GetStringsFromArray()
 			case StringRegExp($gaListofFileLines[$i], "^;.*") ; if it's a comment
 				ContinueLoop
 			case StringInStr($gaListofFileLines[$i], "MsgBox(") ; search for msgbox strings
+				$lType = "MSG"
 			case StringInStr($gaListofFileLines[$i], "guictrlbutton(") ; search for button labels
+				$lType = "BTN"
 			case StringInStr($gaListofFileLines[$i], "GUICtrlSetTip(") ; search for gui tips
+				$lType = "TIP"
+			case StringRegExp($gaListofFileLines[$i], "\$.*\=") ; search for strings which are
+				$lType = "VAR"
 			case Else ; skip everything else
 				ContinueLoop
 		EndSelect
@@ -128,7 +134,7 @@ Func _GetStringsFromArray()
 				$lFuncNameTemp = $lFuncName ; set $lFuncNameTemp with the new $lFuncName
 				$lCountForIds = 1 ; reset to 1
 			EndIf
-			_Array2DAdd($gaListOfStrings, _CreateStringId($lFuncName, $lCountForIds) & "|" & $laStringsLine[$j] & "|" & $i & "|" & $lStringMarker)
+			_Array2DAdd($gaListOfStrings, _CreateStringId($lFuncName, $lType, $lCountForIds) & "|" & $laStringsLine[$j] & "|" & $i & "|" & $lStringMarker)
 		Next
 	Next
 	_ArrayDelete($gaListOfStrings, 0) ; delete 0-index
@@ -177,9 +183,9 @@ EndFunc
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
-Func _CreateStringId($lFuncName, $lNumber, $lPrefix = "IDS_")
+Func _CreateStringId($lFuncName, $lType, $lNumber, $lPrefix = "IDS_")
 
-	Return $lPrefix & $lFuncName & "_" & $lNumber
+	Return $lPrefix & $lFuncName & "_" & $lType & "_" & $lNumber
 
 EndFunc
 
@@ -215,7 +221,9 @@ Func _GuiListOfStrings()
 	While 1
 		$nMsg = GUIGetMsg()
 		Switch $nMsg
-			Case $GUI_EVENT_CLOSE, $Button_Close
+			Case $GUI_EVENT_CLOSE
+				Exit
+			Case $Button_Close
 				_RemoveUncheckedItemsOfListview()
 				$gaListOfStrings = _GUICtrlListView_CreateArray($ListView_Strings)
 				_WriteStringToLocalizationIni()
