@@ -135,31 +135,23 @@ EndFunc
 
 Func _WriteLocFileAu3()
 
-;~ 	Local $file = FileOpen($gFileToWriteOutput, 32+2) ; open file in unicode mode
+	Local $file = FileOpen($gFileToWriteOutput, 32+2) ; open file in unicode mode
 
 	local $laArrayFindAllResult
-;~ 	local $laHelperArray[$gaListOfStrings[0][0]+1] ; create helper array as _ArrayFindAll does not work with 2d array even if it should
-
-;~ 	$laHelperArray[0] = $gaListOfStrings[0][0] ; copy size of array
-;~ 	for $i = 1 to $gaListOfStrings[0][0]
-;~ 		$laHelperArray[$i] = $gaListOfStrings[$i][2]
-;~ 	Next
 
 	for $i = 1 to $gaListofFileLines[0]
-		$laArrayFindAllResult = __ArrayFindAll($gaListOfStrings, $i, 1, 0, 0, 3, 3)
-;~ 		$laArrayFindAllResult = __ArrayFindAll($laHelperArray, $i, 1, 0, 0, 3)
-;~ 		if @error Then MsgBox(16, $gMsgBoxTitle, "error in _ArrayFindAll: " & @error)
-;~ 		MsgBox(16, $gMsgBoxTitle, "$gaListOfStrings[$i][2]: " & $gaListOfStrings[$i][2])
-;~ 		if IsArray($laArrayFindAllResult) Then
-			_ArrayDisplay($laArrayFindAllResult, "$i: " & $i & " - $laArrayFindAllResult")
-;~ 		EndIf
-;~ 		ContinueLoop
+		$laArrayFindAllResult = __ArrayFindAll($gaListOfStrings, $i, 1, 0, 0, 3, 3) ; check if there is more than one string per line
+		if IsArray($laArrayFindAllResult) then
+			for $j = 0 to UBound($laArrayFindAllResult)-1 ; replace string with _LR_GetString function
+				$gaListofFileLines[$i] = StringReplace($gaListofFileLines[$i], $gaListOfStrings[$laArrayFindAllResult[$j]][1], '_LR_GetString("' & $gaListOfStrings[$laArrayFindAllResult[$j]][0] & '")')
+			Next
+		EndIf
 
-;~ 		FileWriteLine($file, $gaListofFileLines[$i])
+		FileWriteLine($file, $gaListofFileLines[$i])
 
 	Next
 
-;~ 	FileClose($file)
+	FileClose($file)
 
 EndFunc
 
